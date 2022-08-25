@@ -1,13 +1,11 @@
 import * as THREE from 'three';
 import Handelr from './Handler.js';
-
 import MazeCreater from './MazeCreater.js';
+
+let N = 3;
 
 class App {
     constructor(eventHandler){
-        const mz = new MazeCreater(5, 5);
-        this.temp = mz.maze;
-
         this.speed = 0.05;
         this._handler = eventHandler;
 
@@ -55,26 +53,7 @@ class App {
         const plane = new THREE.PlaneGeometry(1000, 1000);
         const planeMaterial = new THREE.MeshPhongMaterial({color: 0x00ffff});
         const planeObj = new THREE.Mesh(plane, planeMaterial);
-
-        // 미로의 벽면을 생성하는 박스 지오메트리를 그룹화
-        this._wallWidth = 1;
-        const geometry = new THREE.BoxGeometry(this._wallWidth, this._wallWidth, this._wallWidth);
-        const material = new THREE.MeshPhongMaterial({color: 0x44a88});
-        const mazeWall = new THREE.Group();
-        this.temp.forEach((boxList, y)=>{
-            boxList.forEach((box, x)=>{
-                if(box === "0"){
-                    let newBox = new THREE.Mesh(geometry, material);
-                    newBox.position.set(x, y, 1);
-                    mazeWall.add(newBox);
-                }
-                
-            })
-        })
-
-        mazeWall.add(planeObj)
-        this._scene.add(mazeWall);
-        this._walls = mazeWall;
+        this._scene.add(planeObj);
 
         // 구체 지오메트리 생성 부분
         this._ballRadius = 0.3;
@@ -96,7 +75,40 @@ class App {
 
         this._scene.add(ball);
         this._ball = ball;
+        
+        this._setupMaze();
+    }
 
+    _setupMaze(){
+        // 미로의 벽면을 생성하는 박스 지오메트리를 그룹화
+        const mz = new MazeCreater(N, N);
+        this.mazeBlocks = mz.maze;
+        this._wallWidth = 1;
+        const geometry = new THREE.BoxGeometry(this._wallWidth, this._wallWidth, this._wallWidth);
+        const material = new THREE.MeshPhongMaterial({color: 0x44a88});
+        const mazeWall = new THREE.Group();
+        this.mazeBlocks.forEach((boxList, y)=>{
+            boxList.forEach((box, x)=>{
+                if(box === "0"){
+                    let newBox = new THREE.Mesh(geometry, material);
+                    newBox.position.set(x, y, 1);
+                    mazeWall.add(newBox);
+                }
+            })
+        })
+
+        this._scene.add(mazeWall);
+        this._walls = mazeWall;
+
+        // 목적지 구체 생성
+        const targetSphereGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+        const targetMaterial = new THREE.MeshPhongMaterial({color: 0xffff55});
+        const target = new THREE.Mesh(targetSphereGeometry, targetMaterial);
+
+        target.position.set(2*N-1, 2*N-1, 1);
+
+        this._target = target;
+        this._scene.add(target);
     }
 
 
@@ -164,6 +176,14 @@ class App {
         }
 
         const [x, y] = [Math.round(this._ball.position.x), Math.round(this._ball.position.y)];
+
+        if(x == 2*N-1 && y == 2*N-1){
+            this._ball.position.set(1, 1, 1);
+            this._scene.remove(this._walls);
+            this._scene.remove(this._target);
+            N++;
+            this._setupMaze();
+        }
 
         // 공이 안정된 길 경로 위에 있는 지 검사
         for(let wall of this._walls.children){
