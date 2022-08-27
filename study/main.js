@@ -37,41 +37,50 @@ class App {
             0.1,
             1000
         );
+        camera.up.set(0, 0, 5);
+        camera.lookAt(0, 0, 0);
         this._camera = camera;
     }
 
     _setupLight() {
         const color = 0xffffff;
         const intensity = 1;
-        const light = new THREE.DirectionalLight(color, intensity);
-        light.position.set(0, 4, 4);
+        const bigLight = new THREE.DirectionalLight(color, 1);
+        bigLight.position.set(0, 0, 4);
+        bigLight.lookAt(0, 0, 1);
+
+        const light = new THREE.PointLight(color, 0.5);
+
+        this._light = light;
+
+        this._scene.add(bigLight);
         this._scene.add(light);
     }
 
     _setupModel() {
+        const texture = new THREE.TextureLoader().load('./ball.jpg');
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(2, 2);
+        const wallMaterial = new THREE.MeshBasicMaterial({
+            map: texture
+        });
+
         // 미로의 바닥면을 만드는 플레인 지오메트리
         const plane = new THREE.PlaneGeometry(1000, 1000);
-        const planeMaterial = new THREE.MeshPhongMaterial({color: 0x00ffff});
+        const planeMaterial = new THREE.MeshPhongMaterial({color: 0x000000});
         const planeObj = new THREE.Mesh(plane, planeMaterial);
+        planeObj.position.set(0, 0, 1);
         this._scene.add(planeObj);
 
         // 구체 지오메트리 생성 부분
         this._ballRadius = 0.3;
         const sphereGeometry = new THREE.SphereGeometry(this._ballRadius);
-        const sphereMaterial = new THREE.MeshPhongMaterial({color: 0x44a88});
-        const cube = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        const sphereMaterial = new THREE.MeshPhongMaterial({color: 0x44a88,});
 
-
-        const lineMaterial = new THREE.LineBasicMaterial({color: 0xffff00});
-        const line = new THREE.LineSegments(
-            new THREE.WireframeGeometry(sphereGeometry),
-            lineMaterial
-        );
-
-        const ball = new THREE.Group();
+        
+        const ball = new THREE.Mesh(sphereGeometry, wallMaterial);
         ball.position.set(1, 1, 1);
-        ball.add(cube);
-        ball.add(line);
 
         this._scene.add(ball);
         this._ball = ball;
@@ -80,17 +89,21 @@ class App {
     }
 
     _setupMaze(){
+        const texture = new THREE.TextureLoader().load('./wall_texture.jpg');
+        const wallMaterial = new THREE.MeshLambertMaterial({
+            map: texture
+        });
+
         // 미로의 벽면을 생성하는 박스 지오메트리를 그룹화
         const mz = new MazeCreater(N, N);
         this.mazeBlocks = mz.maze;
         this._wallWidth = 1;
         const geometry = new THREE.BoxGeometry(this._wallWidth, this._wallWidth, this._wallWidth);
-        const material = new THREE.MeshPhongMaterial({color: 0x44a88});
         const mazeWall = new THREE.Group();
         this.mazeBlocks.forEach((boxList, y)=>{
             boxList.forEach((box, x)=>{
                 if(box === "0"){
-                    let newBox = new THREE.Mesh(geometry, material);
+                    let newBox = new THREE.Mesh(geometry, wallMaterial);
                     newBox.position.set(x, y, 1);
                     mazeWall.add(newBox);
                 }
@@ -102,7 +115,9 @@ class App {
 
         // 목적지 구체 생성
         const targetSphereGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-        const targetMaterial = new THREE.MeshPhongMaterial({color: 0xffff55});
+        const targetMaterial = new THREE.MeshLambertMaterial({
+            color: 0xffff55,
+        });
         const target = new THREE.Mesh(targetSphereGeometry, targetMaterial);
 
         target.position.set(2*N-1, 2*N-1, 1);
@@ -134,6 +149,8 @@ class App {
 
         // 카메라를 구체 좌표에 고정
         this._camera.position.set(this._ball.position.x, this._ball.position.y, 5);
+        this._light.position.set(this._ball.position.x, this._ball.position.y, 1);
+        
     }
 
     ballControlls(){
