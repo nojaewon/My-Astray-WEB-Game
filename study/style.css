@@ -12,3 +12,32 @@ body {
     top: 0; left: 0;
     width: 100%; height: 100%;
 }
+
+#interface {
+    position: absolute;
+    margin: 5px;
+    font-size: 0.8em;
+    font-family: cursive;
+    color: #fff;
+}
+
+#interface #dev::before {
+    display: inline;
+    content: 'by ';
+    font-size: 0.8em;
+    font-family: cursive;
+}
+
+#interface #score::before {
+    display: inline;
+    content: 'score : ';
+}
+
+#interface ul {
+    list-style: none;
+    padding: 0;
+}
+
+#interface ul li {
+    margin-top: 5px;
+}

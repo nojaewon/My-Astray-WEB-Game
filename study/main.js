@@ -1,11 +1,14 @@
 import * as THREE from 'three';
 import Handelr from './Handler.js';
 import MazeCreater from './MazeCreater.js';
+import Helper from './Helper.js';
 
 let N = 3;
 
 class App {
     constructor(eventHandler){
+        this.interface = new Helper();
+
         this.speed = 0.05;
         this._handler = eventHandler;
 
@@ -37,8 +40,7 @@ class App {
             0.1,
             1000
         );
-        camera.up.set(0, 0, 5);
-        camera.lookAt(0, 0, 0);
+
         this._camera = camera;
     }
 
@@ -194,12 +196,14 @@ class App {
 
         const [x, y] = [Math.round(this._ball.position.x), Math.round(this._ball.position.y)];
 
+        // 목적지 구체에 도달하여 다음 단계 돌입
         if(x == 2*N-1 && y == 2*N-1){
             this._ball.position.set(1, 1, 1);
             this._scene.remove(this._walls);
             this._scene.remove(this._target);
             N++;
             this._setupMaze();
+            this.interface.levelUp(N);
         }
 
         // 공이 안정된 길 경로 위에 있는 지 검사
