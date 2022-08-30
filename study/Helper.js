@@ -1,3 +1,5 @@
+
+
 export default class Helper {
     constructor(){
         this.start = Date.now();
